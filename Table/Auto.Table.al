@@ -43,7 +43,7 @@ table 50133 Auto
         field(9; "Rental Service"; Code[20])
         {
             Caption = 'Rental Servie';
-            TableRelation = Resource."No.";
+            TableRelation = Resource;
         }
         field(10; "Rental Price"; Decimal)
         {

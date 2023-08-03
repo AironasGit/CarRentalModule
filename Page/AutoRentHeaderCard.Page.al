@@ -12,46 +12,44 @@ page 50139 "Auto Rent Header Card"
             group(General)
             {
                 Caption = 'General';
+                Editable = Rec.Status = Rec.Status::Open;
                 field("No."; Rec."No.")
                 {
                     ToolTip = 'No.';
-                    Editable = Rec.Status = Rec.Status::Open;
                 }
                 field("Client No."; Rec."Client No.")
                 {
                     ToolTip = 'Client No.';
-                    Editable = Rec.Status = Rec.Status::Open;
                 }
                 field("Car No."; Rec."Car No.")
                 {
                     ToolTip = 'Car No.';
-                    Editable = Rec.Status = Rec.Status::Open;
                     trigger OnValidate()
                     begin
-                        CheckReservationDateOverlap()
+                        CheckReservationDateOverlap();
+                        InsertCarRentalPrice();
                     end;
                 }
                 field(Date; Rec.Date)
                 {
                     ToolTip = 'Date';
-                    Editable = Rec.Status = Rec.Status::Open;
                 }
                 field("Reserved From"; Rec."Reserved From")
                 {
                     ToolTip = 'Reserved From Date';
-                    Editable = Rec.Status = Rec.Status::Open;
                     trigger OnValidate()
                     begin
-                        CheckReservationDateOverlap()
+                        CheckReservationDateOverlap();
+                        UpdateCarRentPrice();
                     end;
                 }
                 field("Reserved Until"; Rec."Reserved Until")
                 {
                     ToolTip = 'Reserved Until';
-                    Editable = Rec.Status = Rec.Status::Open;
                     trigger OnValidate()
                     begin
-                        CheckReservationDateOverlap()
+                        CheckReservationDateOverlap();
+                        UpdateCarRentPrice();
                     end;
                 }
                 field(Sum; Rec.Sum)
@@ -70,9 +68,11 @@ page 50139 "Auto Rent Header Card"
             group(Rent)
             {
                 Caption = 'Rent';
-                part("Auto Rent Line SubPage"; "Auto Rent Line SubPage")
+                part(Options; "Auto Rent Line SubPage")
                 {
-                    SubPageLink = "Document No." = FIELD("No.");
+                    Caption = 'Options';
+                    Editable = Rec.Status = Rec.Status::Open;
+                    SubPageLink = "Document No." = field("No.");
                 }
             }
         }
@@ -158,5 +158,59 @@ page 50139 "Auto Rent Header Card"
             until AutoReservation.Next() = 0;
     end;
 
-    // TODO: Automatically insert first line into the "Auto Rent Line" table that contains the cars rent price from the Auto table
+    local procedure InsertCarRentalPrice()
+    var
+        AutoRentLine: Record "Auto Rent Line";
+        AutoRec: Record Auto;
+        ResourceRec: Record Resource;
+        AutoRentLineType: Enum "Auto Rent Line Type";
+        Days: Integer;
+    begin
+        if not (Format(Rec."Reserved From", 0) = '') and not (Format(Rec."Reserved Until", 0) = '') then
+            Days := Rec."Reserved Until" - Rec."Reserved From";
+
+        AutoRec.Reset();
+        AutoRec.SetFilter("No.", Rec."Car No.");
+        AutoRec.FindFirst();
+
+        ResourceRec.SetFilter("No.", AutoRec."Rental Service");
+        ResourceRec.FindFirst();
+
+        AutoRentLine.Init();
+        AutoRentLine."Document No." := Rec."No.";
+        AutoRentLine.Type := AutoRentLineType::Resource;
+        AutoRentLine."No." := AutoRec."Rental Service";
+        AutoRentLine.Description := ResourceRec.Name;
+        AutoRentLine.Quantity := 1;
+        AutoRentLine.Price := ResourceRec."Unit Price" * Days;
+        AutoRentLine.Sum := ResourceRec."Unit Price" * Days;
+
+        if not AutoRentLine.Insert(true) then
+            AutoRentLine.Modify(true);
+    end;
+
+    local procedure UpdateCarRentPrice()
+    var
+        AutoRentLine: Record "Auto Rent Line";
+        ResourceRec: Record Resource;
+        Days: Integer;
+    begin
+        if not (Format(Rec."Reserved From", 0) = '') and not (Format(Rec."Reserved Until", 0) = '') then
+            Days := Rec."Reserved Until" - Rec."Reserved From";
+
+        AutoRentLine.Reset();
+        AutoRentLine.SetFilter("Document No.", Rec."No.");
+        AutoRentLine.FindFirst();
+
+        ResourceRec.SetFilter("No.", AutoRentLine."No.");
+        ResourceRec.FindFirst();
+
+        AutoRentLine.Price := ResourceRec."Unit Price" * Days;
+        AutoRentLine.Sum := ResourceRec."Unit Price" * Days;
+
+        AutoRentLine.Modify(true);
+
+    end;
+
+
 }

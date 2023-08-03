@@ -61,7 +61,7 @@ page 50135 "Reservation List"
         if AutoReservation.FindSet() then
             repeat
                 if not (AutoReservation."Line No." = Rec."Line No.") then
-                    if (Rec."Reserved From" <= AutoReservation."Reserved Until") and (Rec."Reserved From" >= AutoReservation."Reserved From") then
+                    if (Rec."Reserved From" <= AutoReservation."Reserved Until") and (Rec."Reserved Until" >= AutoReservation."Reserved From") then
                         Error(ReservationDateOverlapErr);
             until AutoReservation.Next() = 0;
     end;

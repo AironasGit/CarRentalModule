@@ -45,12 +45,6 @@ report 50130 "Car Rent Report"
                 {
                 }
             }
-            // column(First_Line_Sum;)
-            // {
-            // }
-            // column(Other_Line_Sum;)
-            // { 
-            // }
             column(Total_Sum; Sum)
             {
             }

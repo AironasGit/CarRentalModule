@@ -7,8 +7,9 @@ page 50142 "Auto Rent Line SubPage"
     SourceTable = "Auto Rent Line";
 
     AutoSplitKey = true;
-    DelayedInsert = true;
     LinksAllowed = false;
+    DelayedInsert = true;
+    DeleteAllowed = false;
     MultipleNewLines = true;
     layout
     {
